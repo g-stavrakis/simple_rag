@@ -16,18 +16,7 @@ def main() -> None:
 
     graph = build_graph()
     try:
-        # Seed the graph with the state fields used across the workflow.
-        result = graph.invoke(
-            {
-                "question": question,
-                "intent": None,
-                "category": None,
-                "rewritten_question": None,
-                "documents": [],
-                "answer": None,
-                "messages": [],
-            }
-        )
+        result = graph.invoke({"question": question})
     finally:
         # Release the cached Qdrant client after the request finishes.
         close_cached_vectorstore()
@@ -39,10 +28,8 @@ def main() -> None:
     print(result["answer"])
 
     print("\nRETRIEVED SOURCES:\n")
-    for i, doc in enumerate(result["documents"], start=1):
-        source = doc.metadata.get("source", "unknown")
-        preview = doc.page_content[:220].replace("\n", " ")
-        print(f"{i}. {source} :: {preview}...")
+    for i, source in enumerate(result.get("sources", []), start=1):
+        print(f"{i}. {source['source']} :: {source['preview']}...")
 
 
 if __name__ == "__main__":

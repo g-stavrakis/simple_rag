@@ -6,7 +6,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
-from app.rag.utils.state import RAGState
+from app.rag.utils.state import RAGState, SourcePreview
 from app.rag.utils.tools import get_complaint_form, get_retriever, llm
 
 ALLOWED_CATEGORIES = [
@@ -108,7 +108,18 @@ def retrieve(state: RAGState) -> dict[str, Any]:
     query = state.get("rewritten_question") or state["question"]
     retriever = get_retriever(category=state.get("category"))
     docs = retriever.invoke(query)
-    return {"documents": docs}
+    sources: list[SourcePreview] = []
+    for doc in docs:
+        source = doc.metadata.get("source_path") or doc.metadata.get("source") or "unknown"
+        preview = doc.page_content[:220].replace("\n", " ").strip()
+        sources.append(
+            {
+                "source": source,
+                "category": doc.metadata.get("category"),
+                "preview": preview,
+            }
+        )
+    return {"documents": docs, "sources": sources}
 
 
 def generate(state: RAGState) -> dict[str, Any]:
@@ -165,7 +176,6 @@ def agent(state: RAGState) -> dict[str, Any]:
         answer = response.content
 
     return {"answer": answer}
-
 
 def route_question(state: RAGState) -> str:
     # Complaint-form traffic goes to the agent; everything else continues to retrieval.

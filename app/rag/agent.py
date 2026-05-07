@@ -10,11 +10,15 @@ from app.rag.utils.nodes import (
     route_question,
     rewrite_query_for_retrieval,
 )
-from app.rag.utils.state import RAGState
+from app.rag.utils.state import RAGInputState, RAGOutputState, RAGState
 
 
 def build_graph():
-    builder = StateGraph(RAGState)
+    builder = StateGraph(
+        RAGState,
+        input_schema=RAGInputState,
+        output_schema=RAGOutputState,
+    )
 
     # Register the core graph steps.
     builder.add_node("detect_intent", detect_intent)
