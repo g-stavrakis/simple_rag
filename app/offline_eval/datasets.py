@@ -55,7 +55,16 @@ retrieve_runs = client.list_runs(
 
 # Prepare inputs and outputs for bulk creation
 retrieve_examples = [
-    {"inputs": run.inputs, "outputs": run.outputs}
+    {
+        "inputs": {
+            "question": run.inputs.get("question"),
+            "query": run.inputs.get("rewritten_question") or run.inputs.get("question"),
+            "category": run.inputs.get("category"),
+        },
+        "outputs": {
+            "sources": run.outputs.get("sources", []),
+        },
+    }
     for run in retrieve_runs
     if run.name == "retrieve" and run.outputs
 ]
